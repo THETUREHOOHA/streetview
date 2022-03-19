@@ -1,28 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-:Module: ``streetview``
-:Author: `Adrian Letchford <http://www.dradrian.com>`_
-:Organisation: `Warwick Business School <http://www.wbs.ac.uk/>`_, `University of Warwick <http://www.warwick.ac.uk/>`_.
-
-
-This is a light module for downloading photos from Google street view. The
-functions allow you to retrieve current and **old** photos.
-
-The photos on Google street view are panoramas and are refered to as such.
-However, you have the option of downloading flat photos, or panoramas.
-
-Retrieving photos is a two step process. First, you must translate GPS
-coordinates into panorama ids. The following code retrieves a list of
-the closest panoramas giving you their id and date:
-
->>> import streetview
->>> panoids = streetview.panoids(lat, lon)
-
-You can then use the panorama ids to download photos with the following
-function:
-
->>> streetview.api_download(panoid, heading, flat_dir, key)
-
+Original code is from https://github.com/robolyst/streetview
+Functions added in this file are
+download_panorama_v1, download_panorama_v2, download_panorama_v3
+Usage: 
+    given latitude and longitude
+    panoids = panoids( lat, lon )
+    panoid = panoids[0]['panoid']
+    panorama_img = download_panorama_v3(panoid, zoom=2)
 """
 
 import re
@@ -34,7 +19,8 @@ import itertools
 from PIL import Image
 from io import BytesIO
 import os
-
+import numpy as np
+from skimage import io
 
 def _panoids_url(lat, lon):
     """
@@ -74,6 +60,7 @@ def panoids(lat, lon, closest=False, disp=False, proxies=None):
     # 2012
     # 2013
     # 2014
+
     pans = re.findall('\[[0-9]+,"(.+?)"\].+?\[\[null,null,(-?[0-9]+.[0-9]+),(-?[0-9]+.[0-9]+)', resp.text)
     pans = [{
         "panoid": p[0],
@@ -133,19 +120,19 @@ def panoids(lat, lon, closest=False, disp=False, proxies=None):
         return pans
 
 
-def tiles_info(panoid):
+def tiles_info(panoid, zoom=5):
     """
     Generate a list of a panorama's tiles and their position.
 
     The format is (x, y, filename, fileurl)
     """
-
-    image_url = "http://cbk0.google.com/cbk?output=tile&panoid={0:}&zoom=5&x={1:}&y={2:}"
+#     image_url = 'http://maps.google.com/cbk?output=tile&panoid={}&zoom={}&x={}&y={}'
+    image_url = "http://cbk0.google.com/cbk?output=tile&panoid={}&zoom={}&x={}&y={}"
 
     # The tiles positions
     coord = list(itertools.product(range(26), range(13)))
 
-    tiles = [(x, y, "%s_%dx%d.jpg" % (panoid, x, y), image_url.format(panoid, x, y)) for x, y in coord]
+    tiles = [(x, y, "%s_%dx%d.jpg" % (panoid, x, y), image_url.format(panoid, zoom, x, y)) for x, y in coord]
 
     return tiles
 
@@ -162,7 +149,7 @@ def download_tiles(tiles, directory, disp=False):
     for i, (x, y, fname, url) in enumerate(tiles):
 
         if disp and i % 20 == 0:
-            print("Image %d (%d)" % (i, len(tiles)))
+            print("Image %d / %d" % (i, len(tiles)))
 
         # Try to download the image file
         while True:
@@ -202,7 +189,139 @@ def stich_tiles(panoid, tiles, directory, final_directory):
 
     panorama.save(final_directory + ("/%s.jpg" % panoid))
     del panorama
+    
 
+
+def download_panorama_v3(panoid, zoom=5, disp=False):
+    '''
+    v3: save image information in a buffer. (v2: save image to dist then read)
+    input:
+        panoid: which is an id of image on google maps
+        zoom: larger number -> higher resolution, from 1 to 5, better less than 3, some location will fail when zoom larger than 3
+        disp: verbose of downloading progress, basically you don't need it
+    output:
+        panorama image (uncropped)
+    '''
+    tile_width = 512
+    tile_height = 512
+    # img_w, img_h = int(np.ceil(416*(2**zoom)/tile_width)*tile_width), int(np.ceil(416*( 2**(zoom-1) )/tile_width)*tile_width)
+    img_w, img_h = 416*(2**zoom), 416*( 2**(zoom-1) )
+    tiles = tiles_info( panoid, zoom=zoom)
+    valid_tiles = []
+    # function of download_tiles
+    for i, tile in enumerate(tiles):
+        x, y, fname, url = tile
+        if disp and i % 20 == 0:
+            print("Image %d / %d" % (i, len(tiles)))
+        if x*tile_width < img_w and y*tile_height < img_h: # tile is valid
+            # Try to download the image file
+            while True:
+                try:
+                    response = requests.get(url, stream=True)
+                    break
+                except requests.ConnectionError:
+                    print("Connection error. Trying again in 2 seconds.")
+                    time.sleep(2)
+            valid_tiles.append( Image.open(BytesIO(response.content)) )
+            del response
+            
+    # function to stich
+    panorama = Image.new('RGB', (img_w, img_h))
+    i = 0
+    for x, y, fname, url in tiles:
+        if x*tile_width < img_w and y*tile_height < img_h: # tile is valid
+            tile = valid_tiles[i]
+            i+=1
+            panorama.paste(im=tile, box=(x*tile_width, y*tile_height))
+    return np.array(panorama)
+
+def download_panorama_v1(panoid, zoom=5, disp=False, directory='temp'):
+    '''
+    v1: simplely concatenate original functions
+    input:
+        panoid
+    output:
+        panorama image (uncropped)
+    '''
+    tiles = tiles_info( panoid, zoom=zoom)
+    if not os.path.exists(directory):
+        os.makedirs( directory )
+    # function of download_tiles
+    for i, (x, y, fname, url) in enumerate(tiles):
+
+        if disp and i % 20 == 0:
+            print("Image %d / %d" % (i, len(tiles)))
+
+        # Try to download the image file
+        while True:
+            try:
+                response = requests.get(url, stream=True)
+                break
+            except requests.ConnectionError:
+                print("Connection error. Trying again in 2 seconds.")
+                time.sleep(2)
+        with open(directory + '/' + fname, 'wb') as out_file:
+            shutil.copyfileobj(response.raw, out_file)
+        del response
+    # function of stich_tiles
+    tile_width = 512
+    tile_height = 512
+
+    panorama = Image.new('RGB', (26*tile_width, 13*tile_height))
+
+    for x, y, fname, url in tiles:
+        fname = directory + "/" + fname
+        tile = Image.open(fname)
+        panorama.paste(im=tile, box=(x*tile_width, y*tile_height))
+        del tile
+    delete_tiles( tiles, directory )
+    return np.array(panorama)
+
+def download_panorama_v2(panoid, zoom=5, disp=False, directory='temp'):
+    '''
+    v2: if tile is in invalid region, just skip them. obsolete: use black block instead of downloading
+    input:
+        panoid
+    output:
+        panorama image (uncropped)
+    '''
+    img_w, img_h = 416*(2**zoom), 416*( 2**(zoom-1) )
+    tile_width = 512
+    tile_height = 512
+    
+    tiles = tiles_info( panoid, zoom=zoom)
+    valid_tiles = []
+    if not os.path.exists(directory):
+        os.makedirs( directory )
+    # function of download_tiles
+    for i, tile in enumerate(tiles):
+        x, y, fname, url = tile
+        if disp and i % 20 == 0:
+            print("Image %d / %d" % (i, len(tiles)))
+        if x*tile_width < img_w and y*tile_height < img_h: # tile is valid
+            valid_tiles.append(tile)
+            # Try to download the image file
+            while True:
+                try:
+                    response = requests.get(url, stream=True)
+                    break
+                except requests.ConnectionError:
+                    print("Connection error. Trying again in 2 seconds.")
+                    time.sleep(2)
+            with open(directory + '/' + fname, 'wb') as out_file:
+                shutil.copyfileobj(response.raw, out_file)
+            del response
+            
+    # function to stich
+    panorama = Image.new('RGB', (img_w, img_h))
+    for x, y, fname, url in tiles:
+        if x*tile_width < img_w and y*tile_height < img_h: # tile is valid
+            fname = directory + "/" + fname
+            tile = Image.open(fname)
+            panorama.paste(im=tile, box=(x*tile_width, y*tile_height))
+            del tile
+    delete_tiles( valid_tiles, directory )
+    return np.array(panorama)
 
 def delete_tiles(tiles, directory):
     for x, y, fname, url in tiles:
