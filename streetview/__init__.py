@@ -78,7 +78,7 @@ def panoids(lat, lon, disp=False):
        
     if disp:
         for pan in pans:
-            print pan
+            print (pan)
 
     # Get all the dates
     # The dates seem to be at the end of the file. They have a strange format but 
