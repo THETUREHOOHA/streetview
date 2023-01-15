@@ -146,7 +146,7 @@ def download_tiles(tiles, directory, disp=False):
     for i, (x, y, fname, url) in enumerate(tiles):
     
         if disp and i % 20 == 0:
-            print "Image %d (%d)" % (i, len(tiles))
+            print ("Image %d (%d)" % (i, len(tiles))
         
         # Try to download the image file 
         while True:
