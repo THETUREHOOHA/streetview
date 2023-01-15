@@ -52,7 +52,7 @@ def _panoids_data(lat, lon):
     return requests.get(url)
     
     
-[docs]def panoids(lat, lon, disp=False):
+def panoids(lat, lon, disp=False):
     """
     Gets the closest panoramas (ids) to the GPS coordinates.
     """
@@ -115,14 +115,14 @@ def _panoids_data(lat, lon):
     
     
 
-[docs]def tiles_info(panoid):
+def tiles_info(panoid):
     """
     Generate a list of a panorama's tiles and their position.
     
     The format is (x, y, filename, fileurl)
     """
     
-    image_url = "http://cbk0.google.com/cbk?output=tile&panoid={0:}&zoom=5&x={1:}&y={2:}"   
+    image_url = "https://cbk0.google.com/cbk?output=tile&panoid={0:}&zoom=5&x={1:}&y={2:}"   
     
     # The tiles positions
     coord = list(itertools.product(range(26),range(13)))
@@ -134,7 +134,7 @@ def _panoids_data(lat, lon):
     
     
 
-[docs]def download_tiles(tiles, directory, disp=False):
+def download_tiles(tiles, directory, disp=False):
     """
     Downloads all the tiles in a Google Stree View panorama into a directory.
     
@@ -163,7 +163,7 @@ def _panoids_data(lat, lon):
         
         
 
-[docs]def stich_tiles(panoid, tiles, directory, final_directory):
+def stich_tiles(panoid, tiles, directory, final_directory):
     """
     Stiches all the tiles of a panorama together. The tiles are located in
     `directory'.
@@ -196,7 +196,7 @@ def delete_tiles(tiles, directory):
    
      
         
-[docs]def api_download(panoid, heading, flat_dir, key):
+def api_download(panoid, heading, flat_dir, key):
     """
     Download an image using the official API. These are not panoramas.
 
