@@ -54,7 +54,7 @@ def _panoids_data(lat, lon, proxies=None):
     return requests.get(url, proxies=None)
 
 
-def panoids(lat, lon, closest=False, disp=False, proxies=None):
+def panoids(lat, lon, closest=True, disp=False, proxies=None):
     """
     Gets the closest panoramas (ids) to the GPS coordinates.
     If the 'closest' boolean parameter is set to true, only the closest panorama
