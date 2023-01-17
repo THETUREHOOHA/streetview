@@ -119,13 +119,13 @@ def panoids(lat, lon, closest=False, disp=False, proxies=None):
     for i, year, month in dates:
         pans[i].update({'year': year, "month": month})
 
-    #Sort the pans array
-    def func(x):
-        if 'year'in x:
-            return datetime(year=x['year'], month=x['month'], day=1)
-        else:
-            return datetime(year=3000, month=1, day=1)
-    pans.sort(key=func)
+#     #Sort the pans array
+#     def func(x):
+#         if 'year'in x:
+#             return datetime(year=x['year'], month=x['month'], day=1)
+#         else:
+#             return datetime(year=3000, month=1, day=1)
+#     pans.sort(key=func)
 
     if closest:
         return [pans[i] for i in range(len(dates))]
