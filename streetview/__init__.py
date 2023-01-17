@@ -83,9 +83,9 @@ def panoids(lat, lon, closest=False, disp=False, proxies=None):
     # Remove duplicate panoramas
     pans = [p for i, p in enumerate(pans) if p not in pans[:i]]
 
-#     if disp:
-#         for pan in pans:
-#             print(pan)
+    if disp:
+        for pan in pans:
+            print(pan)
 
     # Get all the dates
     # The dates seem to be at the end of the file. They have a strange format but
