@@ -110,22 +110,22 @@ def panoids(lat, lon, closest=False, disp=False, proxies=None):
         for i, (year, month) in enumerate(dates):
             pans[-1-i].update({'year': year, "month": month})
 
-    # Make the first value of the dates the index
-    if len(dates) > 0 and dates[-1][0] == '':
-        dates[-1][0] = '0'
-    dates = [[int(v) for v in d] for d in dates]  # Convert all values to integers
-    
-    # Merge the dates into the panorama dictionaries
-    for i, year, month in dates:
-        pans[i].update({'year': year, "month": month})
+    # # Make the first value of the dates the index
+    # if len(dates) > 0 and dates[-1][0] == '':
+    #     dates[-1][0] = '0'
+    # dates = [[int(v) for v in d] for d in dates]  # Convert all values to integers
+    #
+    # # Merge the dates into the panorama dictionaries
+    # for i, year, month in dates:
+    #     pans[i].update({'year': year, "month": month})
 
-#     #Sort the pans array
-#     def func(x):
-#         if 'year'in x:
-#             return datetime(year=x['year'], month=x['month'], day=1)
-#         else:
-#             return datetime(year=3000, month=1, day=1)
-#     pans.sort(key=func)
+    # Sort the pans array
+    def func(x):
+        if 'year'in x:
+            return datetime(year=x['year'], month=x['month'], day=1)
+        else:
+            return datetime(year=3000, month=1, day=1)
+    pans.sort(key=func)
 
     if closest:
         return [pans[i] for i in range(len(dates))]
