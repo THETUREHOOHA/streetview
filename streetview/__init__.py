@@ -143,7 +143,7 @@ def tiles_info(panoid):
     image_url = "https://cbk0.google.com/cbk?output=tile&panoid={0:}&zoom=5&x={1:}&y={2:}"
 
     # The tiles positions
-    coord = list(itertools.product(range(26), range(13)))
+    coord = list(itertools.product(range(32), range(16)))
 
     tiles = [(x, y, "%s_%dx%d.jpg" % (panoid, x, y), image_url.format(panoid, x, y)) for x, y in coord]
 
