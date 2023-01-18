@@ -187,7 +187,7 @@ def stich_tiles(panoid, tiles, directory, final_directory):
     tile_width = 512
     tile_height = 512
 
-    panorama = Image.new('RGB', (26*tile_width, 13*tile_height))
+    panorama = Image.new('RGB', (32*tile_width, 16*tile_height))
 
     for x, y, fname, url in tiles:
 
