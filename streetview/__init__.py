@@ -185,33 +185,27 @@ def stich_tiles(panoid, tiles, directory, final_directory):
     tile_width = 512
     tile_height = 512
 
-    # Open the first tile to get the reference image
-    first_x, first_y, first_fname, first_url = tiles[0]
-    first_fname = directory + "/" + first_fname
-    tile = Image.open(first_fname)
-
-    panorama = Image.new('RGB', (32 * tile_width, 16 * tile_height))
-    panorama.paste(im=tile, box=(first_x * tile_width, first_y * tile_height))
-    del tile
+    panorama = Image.new('RGB', (32*tile_width, 16*tile_height))
 
     # Introduce a counter variable to track the number
     counter = 1
 
-    for x, y, fname, url in tiles[1:]:
+    for x, y, fname, url in tiles:
         fname = directory + "/" + fname
         tile = Image.open(fname)
-        panorama.paste(im=tile, box=(x * tile_width, y * tile_height))
+        panorama.paste(im=tile, box=(x*tile_width, y*tile_height))
         del tile
 
         # Generate the new filename
         new_fname = '%d_%s.jpg' % (counter, panoid)
         counter += 1
 
-        # Save the tile with the new filename
-        tile.save(directory + "/" + new_fname)
+        # Save the panorama with the new filename
+        panorama.save(directory + "/" + new_fname)
 
     panorama.save(final_directory + ("/%s.jpg" % panoid))
     del panorama
+
 
 
 
