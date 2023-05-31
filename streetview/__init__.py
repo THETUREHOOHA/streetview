@@ -177,36 +177,31 @@ def download_tiles(tiles, directory, disp=False):
             shutil.copyfileobj(response.raw, out_file)
         del response
 
+
 def stich_tiles(panoid, tiles, directory, final_directory):
     """
-    Stitches all the tiles of a panorama together. The tiles are located in
+    Stiches all the tiles of a panorama together. The tiles are located in
     `directory'.
     """
+
     tile_width = 512
     tile_height = 512
 
     panorama = Image.new('RGB', (32*tile_width, 16*tile_height))
 
-    # Introduce a counter variable to track the number
-    counter = 1
-
     for x, y, fname, url in tiles:
+
         fname = directory + "/" + fname
         tile = Image.open(fname)
+
         panorama.paste(im=tile, box=(x*tile_width, y*tile_height))
+
         del tile
 
-        # Generate the new filename
-        new_fname = '%d_%s.jpg' % (counter, panoid)
-        counter += 1
-
-        # Save the panorama with the new filename
-        panorama.save(directory + "/" + new_fname)
+#        print fname
 
     panorama.save(final_directory + ("/%s.jpg" % panoid))
     del panorama
-
-
 
 
 def delete_tiles(tiles, directory):
